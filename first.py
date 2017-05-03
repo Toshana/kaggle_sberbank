@@ -12,6 +12,7 @@ Created on Fri Apr 28 11:54:16 2017
 import numpy as np
 import pandas as pd
 from pandas.tools.plotting import scatter_matrix
+from pandas.tools.plotting import andrews_curves
 import matplotlib.pyplot as plt
 from matplotlib.ticker import FormatStrFormatter
 
@@ -20,6 +21,7 @@ train = pd.read_csv("/home/centraltendency/Kaggle/Sberbank/train.csv")
 test = pd.read_csv("/home/centraltendency/Kaggle/Sberbank/train.csv")
 
 # convert timestamp to time
+
 train['timestamp'] = pd.to_datetime(train['timestamp'])
 
 dataset = train.merge(macro, on = 'timestamp', how = 'left')
@@ -32,4 +34,11 @@ ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 
 scatter_matrix(train)
 
-train.plot.box()
+for i in train.columns:
+    if type(i) != int:
+        pass
+    else:
+        train[i].astype(float)
+
+plt.figure()
+andrews_curves(train, 'timestamp')
