@@ -25,8 +25,16 @@ test = pd.read_csv("/home/centraltendency/Kaggle/Sberbank/train.csv")
 train['timestamp'] = pd.to_datetime(train['timestamp'])
 
 dataset = train.merge(macro, on = 'timestamp', how = 'left')
-dataset.describe
+dataset.describe()
 
+for i in dataset.columns:
+    if type(dataset[i][0]) != 'str':
+        plt.plot(dataset['timestamp'], dataset[i])
+        plt.xlabel(i)
+        plt.ylabel("Time")
+        name = i + ".png"    
+        plt.savefig(name)
+        plt.close()
 
 fig, ax = plt.subplots()
 ax.plot(train.timestamp, train.price_doc)
