@@ -26,27 +26,62 @@ train['timestamp'] = pd.to_datetime(train['timestamp'])
 
 dataset = train.merge(macro, on = 'timestamp', how = 'left')
 dataset.describe()
+X = dataset.drop(["id", "timestamp"], axis = 1)
+y = dataset["id"]
 
-for i in dataset.columns:
-    if type(dataset[i][0]) != 'str':
-        plt.plot(dataset['timestamp'], dataset[i])
-        plt.xlabel(i)
-        plt.ylabel("Time")
-        name = i + ".png"    
-        plt.savefig(name)
-        plt.close()
+## One hot encoding data
+from sklearn.preprocessing import LabelEncoder
 
-fig, ax = plt.subplots()
-ax.plot(train.timestamp, train.price_doc)
-ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+for i in X.columns:
+    if isinstance(X[i][0], str):
+        print i
+        le = LabelEncoder()
+        X[i] = le.fit_transform(X[i])
+        
+## Impute missing data
+from sklearn.preprocessing import Imputer
 
-scatter_matrix(train)
+imp = Imputer(missing_values = 'NaN', strategy = 'mean', axis = 1)
+imputed_X = pd.DataFrame(imp.fit_transform(X))
+imputed_X.columns = X.columns
+imputed_X.index = X.index
+        
+## standardize data
+from sklearn.preprocessing import StandardScaler
 
-for i in train.columns:
-    if type(i) != int:
-        pass
-    else:
-        train[i].astype(float)
+for i in X.columns:
+    imputed_X[i] = StandardScaler().fit_transform(imputed_X[i])
 
-plt.figure()
-andrews_curves(train, 'timestamp')
+#for i in dataset.columns:
+#        plt.figure()
+#        plt.plot(dataset['timestamp'], dataset[i])
+#        plt.xlabel(i)
+#        plt.ylabel("Time")
+#        name = i + ".png"    
+#        plt.savefig(name)
+#        plt.close()
+#
+#fig, ax = plt.subplots()
+#ax.plot(train.timestamp, train.price_doc)
+#ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+#
+#scatter_matrix(train)
+#
+#for i in train.columns:
+#    if type(i) != int:
+#        pass
+#    else:
+#        train[i].astype(float)
+#
+#plt.figure()
+#andrews_curves(train, 'timestamp')
+
+
+# PCA
+# apply pca by fitting the data with the same number of dimensions as features
+
+from sklearn.decomposition import PCA
+pca = PCA()
+
+pca.fit(imputed_X)
+pca.explained_variance_
