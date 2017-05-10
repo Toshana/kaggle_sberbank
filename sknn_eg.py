@@ -9,6 +9,9 @@ Created on Tue May  9 11:47:20 2017
 
 import numpy as np
 import pandas as pd
+import logging
+logging.basicConfig()
+
 from pandas.tools.plotting import scatter_matrix
 from pandas.tools.plotting import andrews_curves
 import matplotlib.pyplot as plt
@@ -61,36 +64,58 @@ from sklearn.decomposition import PCA
 
 ## Most of the data is explained by the first two principal components.
 
-pca = PCA(n_components = 7).fit(imputed_X)
-reduced_data = pca.transform(imputed_X)
-reduced_data = pd.DataFrame(reduced_data, columns = ["Dimension 1", "Dimension 2", "Dimension 3", "Dimension 4", "Dimension 5", "Dimension 6", "Dimension 7"])
-
-## Split data
-from sklearn.model_selection import train_test_split
-
-X_train, X_test, y_train, y_test = train_test_split(reduced_data, y)
-
-## Random Forest
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import r2_score
-from sklearn.metrics import mean_squared_error
-
-clf_rf = RandomForestRegressor()
-clf_rf.fit(X_train, y_train)
-
-clf_r2 = r2_score(y_test, clf_rf.predict(X_test)) # 0.34062819632035346
-mse = mean_squared_error(y_test, clf_rf.predict(X_test)) # 14539149684678.707
-clf_r2
-mse
-
+#pca = PCA(n_components = 7).fit(imputed_X)
+#reduced_data = pca.transform(imputed_X)
+#reduced_data = pd.DataFrame(reduced_data, columns = ["Dimension 1", "Dimension 2", "Dimension 3", "Dimension 4", "Dimension 5", "Dimension 6", "Dimension 7"])
+#
+### Split data
+#from sklearn.model_selection import train_test_split
+#
+#X_train, X_test, y_train, y_test = train_test_split(reduced_data, y)
+#
+### Random Forest
+#from sklearn.ensemble import RandomForestRegressor
+#from sklearn.metrics import r2_score
+#from sklearn.metrics import mean_squared_error
+#
+#clf_rf = RandomForestRegressor()
+#clf_rf.fit(X_train, y_train)
+#
+#clf_r2 = r2_score(y_test, clf_rf.predict(X_test)) # 0.34062819632035346
+#mse = mean_squared_error(y_test, clf_rf.predict(X_test)) # 14539149684678.707
+#clf_r2
+#mse
+#
 ## Neural Networks
 from sknn.mlp import Regressor, Layer
 from sklearn.pipeline import Pipeline
 
 pipeline = Pipeline([
-    ('neural network', Regressor(layers = [Layer("Rectifier", units = 100), Layer("Softmax")], learning_rate = 0.02, n_iter = 10))    
+    ('neural network', Regressor(layers = [Layer("Sigmoid", units = 100), 
+                                           Layer("Linear")], 
+    learning_rate = 0.00001, 
+    n_iter = 10))    
     ])
-    
-pipeline.fit(X_train.as_matrix()[:, np.newaxis], y_train.as_matrix())
-pipeline.score(X_test.as_matrix()[:, np.newaxis], y_test.as_matrix())
-r2_score(y_test.as_matrix(), pipeline.predict(X_test.as_matrix()[:, np.newaxis]))
+#    
+#data = X_train.as_matrix()[:, np.newaxis]
+#target = y_train.as_matrix()[:, np.newaxis]   
+#pipeline.fit(data, target)
+
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(imputed_X, y)
+data = X_train.as_matrix()[:, np.newaxis]
+target = y_train.as_matrix()[:, np.newaxis]  
+ 
+pipeline.fit(data, target)
+score = pipeline.score(X_test.as_matrix()[:, np.newaxis], y_test.as_matrix()[:, np.newaxis])
+
+#pipeline.score(X_test.as_matrix()[:, np.newaxis], y_test.as_matrix())
+#r2_score(y_test.as_matrix(), pipeline.predict(X_test.as_matrix()[:, np.newaxis]))
+
+# Grid Search
+from sklearn.model_selection import GridSearchCV
+
+gs = GridSearchCV(pipeline, param_grid={
+    'neural network__hidden0__units': [4, 8, 12, 14],
+    'neural network__hidden0__type': ["Rectifier", "Sigmoid", "Tanh"]})
+gs.fit(data, target)
